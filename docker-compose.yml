@@ -1,0 +1,16 @@
+version: '3.4'
+
+services:
+  scalingapi:
+    image: ${DOCKER_REGISTRY-}scalingapi
+    build:
+      context: .
+      dockerfile: ScalingApi/Dockerfile
+
+  workernode:
+    image: ${DOCKER_REGISTRY-}workernode
+    build:
+      context: .
+      dockerfile: WorkerNode/Dockerfile
+
+

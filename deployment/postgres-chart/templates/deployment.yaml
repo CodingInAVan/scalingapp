@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "postgres-chart.fullname" . }}
+  labels:
+    {{- include "postgres-chart.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "postgres-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "postgres-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15.1
+          env:
+            - name: POSTGRES_USER
+              value: {{ .Values.postgresql.username }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgresql.password }}
+            - name: POSTGRES_DB
+              value: {{ .Values.postgresql.database }}
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: init-scripts-volume
+              mountPath: /docker-entrypoint-initdb.d/
+      volumes:
+        - name: init-scripts-volume
+          configMap:
+            name: {{ include "postgres-chart.fullname" . }}-init-scripts

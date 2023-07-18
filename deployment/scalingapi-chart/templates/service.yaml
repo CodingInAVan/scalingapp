@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: scalingapi-service
+  labels:
+    {{- include "scalingapi-chart.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "scalingapi-chart.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

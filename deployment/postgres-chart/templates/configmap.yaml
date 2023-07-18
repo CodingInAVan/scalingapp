@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "postgres-chart.fullname" . }}-init-scripts
+  labels:
+    {{- include "postgres-chart.labels" . | nindent 4 }}
+data:
+  init.sql: |
+    CREATE TABLE IF NOT EXISTS Job (
+      ID UUID PRIMARY KEY,
+      Value INT DEFAULT 0,
+      CurrentWorker VARCHAR
+    );
+    CREATE INDEX idx_CurrentWorker ON Job(CurrentWorker);
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    INSERT INTO Job (ID, Value, CurrentWorker)
+      VALUES (uuid_generate_v4(), 0, ''),
+       (uuid_generate_v4(), 0, ''),
+       (uuid_generate_v4(), 0, ''),
+       (uuid_generate_v4(), 0, ''),
+       (uuid_generate_v4(), 0, ''),
+       (uuid_generate_v4(), 0, ''),
+       (uuid_generate_v4(), 0, ''),
+       (uuid_generate_v4(), 0, ''),
+       (uuid_generate_v4(), 0, ''),
+       (uuid_generate_v4(), 0, ''),
+       (uuid_generate_v4(), 0, ''),
+       (uuid_generate_v4(), 0, ''),
+       (uuid_generate_v4(), 0, '');

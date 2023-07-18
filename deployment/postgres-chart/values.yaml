@@ -1,0 +1,4 @@
+postgresql:
+  database: scalingapp
+  username: mhshin
+  password: test123

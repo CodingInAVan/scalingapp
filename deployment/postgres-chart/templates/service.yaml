@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  labels:
+    {{- include "postgres-chart.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgres
+  selector:
+    app.kubernetes.io/name: {{ include "postgres-chart.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
