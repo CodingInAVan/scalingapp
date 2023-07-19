@@ -26,6 +26,7 @@
                 _logger.LogInformation("Assigned worker has been removed for Job[{JobId}]", job.Id);
             }
 			_workers.Remove(worker);
+			_workerNodeHashingService.Remove(worker);
             _logger.LogInformation("Worker[{WorkerName}] has been removed", worker.Name);
         }
 

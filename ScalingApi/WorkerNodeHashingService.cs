@@ -17,6 +17,11 @@ namespace ScalingApi
 			var hash = ComputeHash(worker.Name);
             _sortedHashDic[hash] = worker;
 		}
+		public void Remove(WorkerNode worker)
+		{
+			var hash = ComputeHash(worker.Name);
+			_sortedHashDic.Remove(hash);
+		}
 
 		public WorkerNode GetPreviousWorker(WorkerNode node)
 		{
