@@ -66,7 +66,7 @@ namespace ScalingManagerTest
         public void SetUp()
         {
             _jobRepository = new MockJobRepository(_jobData);
-            _manager = new WorkerNodeManager(_jobRepository, _workerNodeService, new NullLogger<WorkerNodeManager>());
+            _manager = new WorkerNodeManager(_jobRepository, _workerNodeService, new NullLogger<WorkerNodeManager>(), new WorkerNodeHashingService(new NullLogger<WorkerNodeHashingService>()));
         }
 
         // Given jobs which have a pre-generated Guid should be assigend worker correctly.
@@ -74,8 +74,8 @@ namespace ScalingManagerTest
         [TestMethod]
         public void SyncTest()
         {
-            _workerNodeService.AddWorkerNode(new WorkerNode() { Name = "pod-1 99999", UpdatedAt = DateTimeOffset.UtcNow });
-            _workerNodeService.AddWorkerNode(new WorkerNode() { Name = "pod-2 12345", UpdatedAt = DateTimeOffset.UtcNow });
+            _workerNodeService.UpdateWorkerNode(new WorkerNode() { Name = "pod-1 99999", UpdatedAt = DateTimeOffset.UtcNow });
+            _workerNodeService.UpdateWorkerNode(new WorkerNode() { Name = "pod-2 12345", UpdatedAt = DateTimeOffset.UtcNow });
 
             var testJobs = new List<Job>()
             {
@@ -98,7 +98,7 @@ namespace ScalingManagerTest
             Assert.AreEqual(jobs.Where(job => job.CurrentWorker == "pod-1 99999").ToList().Count, 2);
             Assert.AreEqual(jobs.Where(job => job.CurrentWorker == "pod-2 12345").ToList().Count, 3);
 
-            _workerNodeService.AddWorkerNode(new WorkerNode() { Name = "pod-3 00000", UpdatedAt = DateTimeOffset.UtcNow });
+            _workerNodeService.UpdateWorkerNode(new WorkerNode() { Name = "pod-3 00000", UpdatedAt = DateTimeOffset.UtcNow });
 
             _manager.SyncWorkers();
 

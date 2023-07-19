@@ -2,15 +2,15 @@
 {
 	public class WorkerNodeManager : IWorkerNodeManager
     {
-		private readonly WorkerNodeHashingService _workerNodeHashingService;
-		private readonly List<WorkerNode> _workers = new();
+		private readonly IWorkerNodeHashingService _workerNodeHashingService;
+		private readonly HashSet<WorkerNode> _workers = new();
 		private readonly IJobRepository _jobRepository;
 		private readonly IWorkerNodeService _workerNodeService;
 		private readonly ILogger<WorkerNodeManager> _logger;
 
-        public WorkerNodeManager(IJobRepository jobRepository, IWorkerNodeService workerNodeService, ILogger<WorkerNodeManager> logger)
+        public WorkerNodeManager(IJobRepository jobRepository, IWorkerNodeService workerNodeService, ILogger<WorkerNodeManager> logger, IWorkerNodeHashingService workerNodeHashingService)
 		{
-            _workerNodeHashingService = new WorkerNodeHashingService();
+            _workerNodeHashingService = workerNodeHashingService;
             _jobRepository = jobRepository;
 			_workerNodeService = workerNodeService;
 			_logger = logger;
@@ -58,7 +58,10 @@
             foreach (var job in jobs)
             {
                 var worker = _workerNodeHashingService.Get(job.Id.ToString());
-				_jobRepository.Update(new Job { Id = job.Id, CurrentWorker = worker.Name });
+				if (worker != null)
+				{
+                    _jobRepository.Update(new Job { Id = job.Id, CurrentWorker = worker.Name });
+                }
             }
         }
 
@@ -72,7 +75,7 @@
 
 		public void SyncWorkers()
 		{
-			var registeredWorkerSet = _workers.ToHashSet();
+			var registeredWorkerSet = _workers;
             var currentRunningWorkerNamesSet = _workerNodeService.GetActiveWorkerNodeNames().ToHashSet();
             List<WorkerNode> disconnectedWorkerNodes = new();
 
@@ -80,9 +83,11 @@
 			{
 				if(!currentRunningWorkerNamesSet.Contains(workerNode.Name))
 				{
+                    _logger.LogInformation("Adding to disconnected worker nodes {workerNode}", workerNode);
                     disconnectedWorkerNodes.Add(workerNode);
 				} else
 				{
+                    _logger.LogInformation("Already registered so remove {workerNode}", workerNode);
                     currentRunningWorkerNamesSet.Remove(workerNode.Name);
 				}
 			}
@@ -96,11 +101,16 @@
             foreach (var workerName in currentRunningWorkerNamesSet)
             {
 				var workerNode = new WorkerNode() { Name = workerName, UpdatedAt = DateTimeOffset.UtcNow };
+				_logger.LogInformation("Registering workerNode {workerNode}", workerNode);
 				RegisterWorkerNode(workerNode);
 			}
 
 			// Get all zombie jobs whose assigned job does not exist anymore and unassign it.
 			var zombieJobs = _jobRepository.GetZombieJobs(_workers.Select(w => w.Name).ToList());
+			foreach(var zombie in zombieJobs)
+			{
+                _logger.LogInformation("Zombie item found {zombie}", zombie);
+            }
 			RemoveWorkerFromJobs(zombieJobs);
 
 

@@ -13,7 +13,6 @@ namespace ScalingApi
 		{
             _logger = logger;
             _connectionString = databaseSettings.Value.ConnectionString;
-            _logger.LogInformation("ConnectionString = {connectionString}", _connectionString);
 		}
 
         public List<Job> GetAll()
@@ -62,6 +61,7 @@ namespace ScalingApi
         public List<Job> GetZombieJobs(List<string> activeWorkerNames)
         {
             using var connection = new NpgsqlConnection(_connectionString);
+            connection.Open();
 
             var parameters = new List<NpgsqlParameter>();
             var inClause = new StringBuilder();
@@ -71,9 +71,14 @@ namespace ScalingApi
                 parameters.Add(new NpgsqlParameter(parameterName, activeWorkerNames[i]));
                 inClause.Append(i > 0 ? $", {parameterName}" : parameterName);
             }
+            _logger.LogInformation("inClause = {inClause}", inClause.ToString());
 
             var jobs = new List<Job>();
-            using var command = new NpgsqlCommand($"SELECT * FROM jobs WHERE CurrentWorker NOT IN ({inClause})", connection);
+            if (string.IsNullOrEmpty(inClause.ToString()))
+            {
+                return new();
+            }
+            using var command = new NpgsqlCommand($"SELECT ID, CurrentWorker FROM Job WHERE CurrentWorker NOT IN ({inClause})", connection);
             command.Parameters.AddRange(parameters.ToArray());
             using var reader = command.ExecuteReader();
             while (reader.Read())

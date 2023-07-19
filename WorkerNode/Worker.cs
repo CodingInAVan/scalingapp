@@ -10,7 +10,7 @@ public class Worker : BackgroundService
     private readonly string _podName;
     private readonly string _connectionString;
     private readonly HttpClient _httpClient;
-    private const string baseApi = "http://scalingapi-service:8080/worker/";
+    private const string baseApi = "http://scalingapi-service/worker/";
 
     public Worker(ILogger<Worker> logger, IOptions<DatabaseSettings> databaseSettings, HttpClient httpClient)
     {
@@ -43,7 +43,7 @@ public class Worker : BackgroundService
             }
 
             using var connection = new NpgsqlConnection(_connectionString);
-
+            connection.Open();
             var command = new NpgsqlCommand("SELECT ID FROM Job WHERE CurrentWorker = @CurrentWorker", connection);
             command.Parameters.AddWithValue("@CurrentWorker", _podName);
 
@@ -53,8 +53,9 @@ public class Worker : BackgroundService
             {
                 _logger.LogInformation("Worker[{WorkerName}] - Job ID {JobId}", _podName, reader.GetGuid(0));
             }
+            reader.Close();
 
-            command = new NpgsqlCommand("Update Value = Value + 1 FROM Job WHERE CurrentWorker = @CurrentWorker");
+            command = new NpgsqlCommand("Update Job SET Value = Value + 1 WHERE CurrentWorker = @CurrentWorker", connection);
             command.Parameters.AddWithValue("@CurrentWorker", _podName);
             command.ExecuteNonQuery();
 

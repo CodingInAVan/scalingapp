@@ -11,9 +11,8 @@ builder.Logging.AddConsole();
 builder.Services.AddSingleton<IJobRepository, JobRepository>();
 builder.Services.AddSingleton<IWorkerNodeService>(sb => new WorkerNodeService(2));
 builder.Services.AddSingleton<IWorkerNodeManager, WorkerNodeManager>();
+builder.Services.AddSingleton<IWorkerNodeHashingService, WorkerNodeHashingService>();
 builder.Services.AddHostedService<JobSyncService>();
-
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
